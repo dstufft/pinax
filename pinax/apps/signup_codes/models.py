@@ -13,6 +13,11 @@ from django.contrib.sites.models import Site
 
 from pinax.apps.signup_codes.signals import signup_code_used
 
+try:
+    from django.utils.timezone import now
+except ImportError:
+    now = datetime.datetime.now
+
 
 class SignupCode(models.Model):
     
@@ -23,8 +28,8 @@ class SignupCode(models.Model):
     email = models.EmailField(blank=True)
     notes = models.TextField(blank=True)
     sent = models.DateTimeField(null=True, blank=True)
-    created = models.DateTimeField(default=datetime.datetime.now, editable=False)
-    
+    created = models.DateTimeField(default=now, editable=False)
+
     # calculated
     use_count = models.PositiveIntegerField(editable=False, default=0)
     
@@ -33,7 +38,7 @@ class SignupCode(models.Model):
     
     @classmethod
     def create(cls, email, expiry, group=None):
-        expiry = datetime.datetime.now() + datetime.timedelta(hours=expiry)
+        expiry = now() + datetime.timedelta(hours=expiry)
         bits = [
             settings.SECRET_KEY,
             email,
@@ -56,7 +61,7 @@ class SignupCode(models.Model):
                 if signup_code.max_uses and signup_code.max_uses < signup_code.use_count + 1:
                     return False
                 else:
-                    if signup_code.expiry and datetime.datetime.now() > signup_code.expiry:
+                    if signup_code.expiry and now() > signup_code.expiry:
                         return False
                     else:
                         return signup_code
@@ -88,7 +93,7 @@ class SignupCode(models.Model):
         subject = render_to_string("signup_codes/invite_user_subject.txt", ctx)
         message = render_to_string("signup_codes/invite_user.txt", ctx)
         send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [self.email])
-        self.sent = datetime.datetime.now()
+        self.sent = now()
         self.save()
 
 
@@ -96,7 +101,7 @@ class SignupCodeResult(models.Model):
     
     signup_code = models.ForeignKey(SignupCode)
     user = models.ForeignKey(User)
-    timestamp = models.DateTimeField(default=datetime.datetime.now)
+    timestamp = models.DateTimeField(default=now)
 
 
 @receiver(post_save, sender=SignupCodeResult)
