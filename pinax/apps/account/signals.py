@@ -9,3 +9,9 @@ user_sign_up_attempt = django.dispatch.Signal(providing_args=["username",  "emai
 user_signed_up = django.dispatch.Signal(providing_args=["user"])
 
 timezone_changed = django.dispatch.Signal(providing_args=["request", "from_timezone", "to_timezone"])
+
+# Email Signals
+user_added_email = django.dispatch.Signal(providing_args=["request", "email"])
+user_resend_confirmation_email = django.dispatch.Signal(providing_args=["request", "email"])
+user_removed_email = django.dispatch.Signal(providing_args=["request", "email"])
+user_set_primary = django.dispatch.Signal(providing_args=["request", "new_primary_email"])

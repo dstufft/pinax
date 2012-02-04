@@ -2,6 +2,7 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.db import models
+from django.dispatch import receiver
 from django.http import HttpResponseRedirect, HttpResponseForbidden, Http404
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
@@ -24,7 +25,13 @@ from pinax.apps.account.utils import get_default_redirect, user_display
 from pinax.apps.account.forms import AddEmailForm, ChangeLanguageForm, ChangePasswordForm
 from pinax.apps.account.forms import ChangeTimezoneForm, LoginForm, ResetPasswordKeyForm
 from pinax.apps.account.forms import ResetPasswordForm, SetPasswordForm, SignupForm
-from pinax.apps.account.signals import timezone_changed
+from pinax.apps.account.signals import (
+                                            timezone_changed,
+                                            user_added_email,
+                                            user_resend_confirmation_email,
+                                            user_removed_email,
+                                            user_set_primary,
+                                        )
 
 
 def group_and_bridge(kwargs):
@@ -180,12 +187,8 @@ def email(request, **kwargs):
             add_email_form = form_class(request.user, request.POST)
             if add_email_form.is_valid():
                 add_email_form.save()
-                messages.add_message(request, messages.INFO,
-                    ugettext(u"Confirmation email sent to %(email)s") % {
-                            "email": add_email_form.cleaned_data["email"]
-                        }
-                    )
-                add_email_form = form_class() # @@@
+                user_added_email.send(sender=User, request=request, email=add_email_form.cleaned_data["email"])
+                add_email_form = form_class()  # @@@
         else:
             add_email_form = form_class()
             if request.POST["action"] == "send":
@@ -195,12 +198,8 @@ def email(request, **kwargs):
                         user=request.user,
                         email=email,
                     )
-                    messages.add_message(request, messages.INFO,
-                        ugettext("Confirmation email sent to %(email)s") % {
-                            "email": email,
-                        }
-                    )
                     EmailConfirmation.objects.send_confirmation(email_address)
+                    user_resend_confirmation_email.send(sender=User, request=request, email=email)
                 except EmailAddress.DoesNotExist:
                     pass
             elif request.POST["action"] == "remove":
@@ -211,11 +210,7 @@ def email(request, **kwargs):
                         email=email
                     )
                     email_address.delete()
-                    messages.add_message(request, messages.SUCCESS,
-                        ugettext("Removed email address %(email)s") % {
-                            "email": email,
-                        }
-                    )
+                    user_removed_email.send(sender=User, request=request, email=email)
                 except EmailAddress.DoesNotExist:
                     pass
             elif request.POST["action"] == "primary":
@@ -225,6 +220,7 @@ def email(request, **kwargs):
                     email=email,
                 )
                 email_address.set_as_primary()
+                user_set_primary.send(sender=User, request=request, email=email)
     else:
         add_email_form = form_class()
     
@@ -456,3 +452,22 @@ def language_change(request, **kwargs):
     })
     
     return render_to_response(template_name, RequestContext(request, ctx))
+
+
+@receiver(user_added_email, sender=User)
+@receiver(user_resend_confirmation_email, sender=User)
+def send_confirmation_message(sender, request, email, **kwargs):
+    messages.add_message(request, messages.INFO,
+        ugettext(u"Confirmation email sent to %(email)s") % {
+            "email": email,
+        }
+    )
+
+
+@receiver(user_removed_email, sender=User)
+def send_removed_email_message(sender, request, email, **kwargs):
+    messages.add_message(request, messages.SUCCESS,
+        ugettext("Removed email address %(email)s") % {
+            "email": email,
+        }
+    )
