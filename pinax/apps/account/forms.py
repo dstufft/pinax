@@ -5,6 +5,7 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _, ugettext
+from django.utils.translation import get_language_info
 from django.utils.http import int_to_base36
 
 from django.contrib import messages
@@ -478,7 +479,7 @@ class ChangeLanguageForm(AccountForm):
     language = forms.ChoiceField(
         label = _("Language"),
         required = True,
-        choices = settings.LANGUAGES
+        choices = [(code, get_language_info(code)["name_local"]) for code, lang in settings.LANGUAGES]
     )
     
     def __init__(self, *args, **kwargs):
