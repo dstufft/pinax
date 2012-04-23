@@ -101,8 +101,8 @@ def login(request, **kwargs):
         "redirect_field_value": request.REQUEST.get(redirect_field_name),
     })
     ctx.update(extra_context)
-    
-    return render_to_response(template_name, RequestContext(request, ctx))
+
+    return render_to_response(template_name, context_instance=RequestContext(request, ctx))
 
 
 def logout(request, next_page=None, **kwargs):
@@ -145,7 +145,7 @@ def signup(request, **kwargs):
                     "success_url": success_url,
                 })
                 ctx = RequestContext(request, ctx)
-                return render_to_response("account/verification_sent.html", ctx)
+                return render_to_response("account/verification_sent.html", context_instance=ctx)
             else:
                 form.login(request, user)
                 messages.add_message(request, messages.SUCCESS,
@@ -162,8 +162,8 @@ def signup(request, **kwargs):
         "redirect_field_name": redirect_field_name,
         "redirect_field_value": request.REQUEST.get(redirect_field_name),
     })
-    
-    return render_to_response(template_name, RequestContext(request, ctx))
+
+    return render_to_response(template_name, context_instance=RequestContext(request, ctx))
 
 
 @login_required
@@ -231,8 +231,8 @@ def email(request, **kwargs):
     ctx.update({
         "add_email_form": add_email_form,
     })
-    
-    return render_to_response(template_name, RequestContext(request, ctx))
+
+    return render_to_response(template_name, context_instance=RequestContext(request, ctx))
 
 
 @login_required
@@ -261,8 +261,8 @@ def password_change(request, **kwargs):
     ctx.update({
         "password_change_form": password_change_form,
     })
-    
-    return render_to_response(template_name, RequestContext(request, ctx))
+
+    return render_to_response(template_name, context_instance=RequestContext(request, ctx))
 
 
 @login_required
@@ -291,8 +291,8 @@ def password_set(request, **kwargs):
     ctx.update({
         "password_set_form": password_set_form,
     })
-    
-    return render_to_response(template_name, RequestContext(request, ctx))
+
+    return render_to_response(template_name, context_instance=RequestContext(request, ctx))
 
 
 @login_required
@@ -314,8 +314,8 @@ def password_delete(request, **kwargs):
         return HttpResponseRedirect(reverse("acct_passwd_delete_done"))
     
     ctx = group_context(group, bridge)
-    
-    return render_to_response(template_name, RequestContext(request, ctx))
+
+    return render_to_response(template_name, context_instance=RequestContext(request, ctx))
 
 
 def password_reset(request, **kwargs):
@@ -341,8 +341,8 @@ def password_reset(request, **kwargs):
     ctx.update({
         "password_reset_form": password_reset_form,
     })
-    
-    return render_to_response(template_name, RequestContext(request, ctx))
+
+    return render_to_response(template_name, context_instance=RequestContext(request, ctx))
 
 
 def password_reset_done(request, **kwargs):
@@ -351,8 +351,8 @@ def password_reset_done(request, **kwargs):
     
     group, bridge = group_and_bridge(kwargs)
     ctx = group_context(group, bridge)
-    
-    return render_to_response(template_name, RequestContext(request, ctx))
+
+    return render_to_response(template_name, context_instance=RequestContext(request, ctx))
 
 
 def password_reset_from_key(request, uidb36, key, **kwargs):
@@ -390,8 +390,8 @@ def password_reset_from_key(request, uidb36, key, **kwargs):
         ctx.update({
             "token_fail": True,
         })
-    
-    return render_to_response(template_name, RequestContext(request, ctx))
+
+    return render_to_response(template_name, context_instance=RequestContext(request, ctx))
 
 
 @login_required
@@ -416,8 +416,8 @@ def timezone_change(request, **kwargs):
     ctx.update({
         "form": form,
     })
-    
-    return render_to_response(template_name, RequestContext(request, ctx))
+
+    return render_to_response(template_name, context_instance=RequestContext(request, ctx))
 
 
 @login_required
@@ -444,5 +444,5 @@ def language_change(request, **kwargs):
     ctx.update({
         "form": form,
     })
-    
-    return render_to_response(template_name, RequestContext(request, ctx))
+
+    return render_to_response(template_name, context_instance=RequestContext(request, ctx))
